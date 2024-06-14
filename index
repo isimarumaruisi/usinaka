@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日記掲示板</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .login-container, .container {
+            display: none;
+            width: 100%;
+            max-width: 600px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .login-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            text-align: center;
+        }
+        .entry-form {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+        .entry-form textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .entry-form button, .login-container button {
+            align-self: flex-end;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .entry-form button:hover, .login-container button:hover {
+            background-color: #0056b3;
+        }
+        .entries {
+            display: flex;
+            flex-direction: column;
+        }
+        .entry {
+            background-color: #fafafa;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            position: relative;
+        }
+        .delete-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            background-color: #ff0000;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .delete-button:hover {
+            background-color: #cc0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container" id="loginContainer">
+        <h1>パスワードを入力してください</h1>
+        <input type="password" id="passwordInput" placeholder="パスワード">
+        <button onclick="checkPassword()">ログイン</button>
+    </div>
+
+    <div class="container" id="mainContainer">
+        <h1>日記掲示板</h1>
+        <div class="entry-form">
+            <textarea id="entryText" placeholder="ここに日記を書いてください..."></textarea>
+            <button onclick="addEntry()">投稿</button>
+        </div>
+        <div class="entries" id="entries"></div>
+    </div>
+
+    <script>
+        const sitePassword = "yakitori";  // サイトのパスワード
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('loginContainer').style.display = 'flex';
+        });
+
+        function checkPassword() {
+            const userPassword = document.getElementById('passwordInput').value;
+            if (userPassword === sitePassword) {
+                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('mainContainer').style.display = 'block';
+                loadEntries();
+            } else {
+                alert('パスワードが間違っています。');
+            }
+        }
+
+        function addEntry() {
+            const entryText = document.getElementById('entryText').value;
+            if (entryText.trim() === '') return;
+
+            const entry = document.createElement('div');
+            entry.classList.add('entry');
+            entry.textContent = entryText;
+
+            const deleteButton = document.createElement('button');
+            deleteButton.classList.add('delete-button');
+            deleteButton.textContent = '削除';
+            deleteButton.onclick = function() {
+                deleteEntry(entry);
+            };
+
+            entry.appendChild(deleteButton);
+
+            const entries = document.getElementById('entries');
+            entries.insertBefore(entry, entries.firstChild);
+
+            saveEntry(entryText);
+            document.getElementById('entryText').value = '';
+        }
+
+        function saveEntry(entryText) {
+            let entries = JSON.parse(localStorage.getItem('diaryEntries')) || [];
+            entries.unshift(entryText);
+            localStorage.setItem('diaryEntries', JSON.stringify(entries));
+        }
+
+        function loadEntries() {
+            let entries = JSON.parse(localStorage.getItem('diaryEntries')) || [];
+            const entriesContainer = document.getElementById('entries');
+            entries.forEach(entryText => {
+                const entry = document.createElement('div');
+                entry.classList.add('entry');
+                entry.textContent = entryText;
+
+                const deleteButton = document.createElement('button');
+                deleteButton.classList.add('delete-button');
+                deleteButton.textContent = '削除';
+                deleteButton.onclick = function() {
+                    deleteEntry(entry);
+                };
+
+                entry.appendChild(deleteButton);
+                entriesContainer.appendChild(entry);
+            });
+        }
+
+        function deleteEntry(entry) {
+            const userPassword = prompt('パスワードを入力してください:');
+            if (userPassword === sitePassword) {
+                const entryText = entry.textContent.replace('削除', '').trim();
+                entry.remove();
+                removeEntryFromStorage(entryText);
+            } else {
+                alert('パスワードが間違っています。');
+            }
+        }
+
+        function removeEntryFromStorage(entryText) {
+            let entries = JSON.parse(localStorage.getItem('diaryEntries')) || [];
+            entries = entries.filter(text => text !== entryText);
+            localStorage.setItem('diaryEntries', JSON.stringify(entries));
+        }
+    </script>
+</body>
+</html>
